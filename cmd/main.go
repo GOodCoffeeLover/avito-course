@@ -1,7 +1,7 @@
 package main
 
 import (
-	city "avito-course/internal/city"
+	"avito-course/internal/city"
 	"avito-course/internal/handler"
 	"avito-course/internal/weather"
 	"log"

@@ -1,4 +1,4 @@
-package ity
+package city
 
 import (
 	"fmt"

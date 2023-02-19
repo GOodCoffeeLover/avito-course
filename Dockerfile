@@ -9,6 +9,7 @@ ENV CGO_ENABLED=0
 RUN ["go", "build", "-o", "server", "./cmd/main.go"]
 
 # -----------------------------------------------
+
 FROM scratch
 
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
