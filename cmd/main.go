@@ -2,17 +2,24 @@ package main
 
 import (
 	city "avito-course/internal/city"
+	"avito-course/internal/handler"
 	"avito-course/internal/weather"
-	"time"
-
 	"fmt"
+	"log"
+	"net/http"
+	"time"
 )
 
 func main() {
-	c := city.New("Moscow")
-	lat, lng, err := c.GetLocation()
-	fmt.Printf("Long: %v, Lat: %v, err: %v\n", lng, lat, err)
-	w := weather.New()
-	tmp, err := w.GetTemperature(lat, lng, time.Now())
-	fmt.Printf("Temperature: %v, err: %v\n", tmp, err)
+	t := time.Now()
+	fmt.Println(t)
+	port := "7001"
+	cityClient := city.New()
+	weatherClient := weather.New()
+	http.HandleFunc("/forecast", handler.HandleTemperatureRequest(cityClient, weatherClient))
+
+	err := http.ListenAndServe("localhost:"+port, nil)
+	if err != nil {
+		log.Fatalf("Can't start http server: %v", err)
+	}
 }

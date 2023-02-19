@@ -17,9 +17,8 @@ type Weather struct {
 func New() *Weather {
 	url := os.Getenv("WEATHER_API_URL")
 	if url == "" {
-		url = "api.open-meteo.com/v1/forecast"
+		url = "https://api.open-meteo.com/v1/forecast"
 	}
-	url = "https://" + url
 	return &Weather{
 		apiUrl: url,
 	}
@@ -38,7 +37,7 @@ func (w *Weather) getTemperaturesByHour(lat, lng float64, timestamp time.Time) (
 	t := timestamp.Format("2006-01-02")
 	req := fmt.Sprintf("%v?latitude=%v&longitude=%v&hourly=temperature_2m&start_date=%v&end_date=%v", w.apiUrl, lat, lng, t, t)
 
-	log.Printf("[weatherer] making request %v", req)
+	log.Printf("[weatherer] Making request %v", req)
 
 	rsp, err := http.Get(req)
 	if err != nil {
