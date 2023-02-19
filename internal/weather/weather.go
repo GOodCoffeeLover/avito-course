@@ -10,22 +10,22 @@ import (
 	"time"
 )
 
-type Weatherer struct {
+type Weather struct {
 	apiUrl string
 }
 
-func New() *Weatherer {
+func New() *Weather {
 	url := os.Getenv("WEATHER_API_URL")
 	if url == "" {
 		url = "api.open-meteo.com/v1/forecast"
 	}
 	url = "https://" + url
-	return &Weatherer{
+	return &Weather{
 		apiUrl: url,
 	}
 }
 
-func (w *Weatherer) GetTemperature(lat, lng float64, timestamp time.Time) (float64, error) {
+func (w *Weather) GetTemperature(lat, lng float64, timestamp time.Time) (float64, error) {
 	temperatures, err := w.getTemperaturesByHour(lat, lng, timestamp)
 	if err != nil {
 		return 0.0, fmt.Errorf("can't get temperatures for (%v, %v) : %v", lat, lng, err)
@@ -33,7 +33,7 @@ func (w *Weatherer) GetTemperature(lat, lng float64, timestamp time.Time) (float
 	return temperatures[timestamp.Hour()], nil
 }
 
-func (w *Weatherer) getTemperaturesByHour(lat, lng float64, timestamp time.Time) ([]float64, error) {
+func (w *Weather) getTemperaturesByHour(lat, lng float64, timestamp time.Time) ([]float64, error) {
 
 	t := timestamp.Format("2006-01-02")
 	req := fmt.Sprintf("%v?latitude=%v&longitude=%v&hourly=temperature_2m&start_date=%v&end_date=%v", w.apiUrl, lat, lng, t, t)
