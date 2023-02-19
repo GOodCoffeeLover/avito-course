@@ -1,12 +1,13 @@
 package main
 
 import (
-  "fmt"
-  "github.com/student31415/avito-course/internal/city"
+	city "avito-course/internal/city"
+	"fmt"
 )
 
 func main() {
-  fmt.Println("Hello world!")
-  city.New("Moscow")
-
+	fmt.Println("Hello world!")
+	c := city.New("Moscow")
+	lng, lat, err := c.GetLocation()
+	fmt.Printf("Long: %v, Lat: %v, err: %v", lng, lat, err)
 }
