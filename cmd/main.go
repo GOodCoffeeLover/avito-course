@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello world!")
 	c := city.New("Moscow")
 	lat, lng, err := c.GetLocation()
 	fmt.Printf("Long: %v, Lat: %v, err: %v\n", lng, lat, err)
