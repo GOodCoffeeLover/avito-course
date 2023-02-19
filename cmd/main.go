@@ -16,10 +16,14 @@ func main() {
 	}
 	cityClient := city.New()
 	weatherClient := weather.New()
-	http.HandleFunc("/forecast", handler.HandleTemperatureRequest(cityClient, weatherClient))
 
-	err := http.ListenAndServe("localhost:"+port, nil)
+	http.HandleFunc("/forecast", handler.HandleTemperatureRequest(cityClient, weatherClient))
+	addr := "0.0.0.0:" + port
+
+	log.Printf("Starting server at %v ...", addr)
+
+	err := http.ListenAndServe(addr, nil)
 	if err != nil {
-		log.Fatalf("Can't start http server: %v", err)
+		log.Fatalf("Can't start http server: %v\n", err)
 	}
 }
