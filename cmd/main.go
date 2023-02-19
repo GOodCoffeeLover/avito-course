@@ -14,5 +14,5 @@ func main() {
 	fmt.Printf("Long: %v, Lat: %v, err: %v\n", lng, lat, err)
 	w := weather.New()
 	tmp, err := w.GetTemperature(lat, lng, time.Now())
-	fmt.Printf("Temperature: %v, err: %v", tmp, err)
+	fmt.Printf("Temperature: %v, err: %v\n", tmp, err)
 }
