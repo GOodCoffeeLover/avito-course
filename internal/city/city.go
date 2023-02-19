@@ -1,5 +1,9 @@
 package city
 
+import (
+	"github.com/codingsince1985/geo-golang"
+)
+
 type City struct{
 	address string 
 }
