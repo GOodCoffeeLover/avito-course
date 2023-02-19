@@ -4,16 +4,16 @@ import (
 	city "avito-course/internal/city"
 	"avito-course/internal/handler"
 	"avito-course/internal/weather"
-	"fmt"
 	"log"
 	"net/http"
-	"time"
+	"os"
 )
 
 func main() {
-	t := time.Now()
-	fmt.Println(t)
-	port := "7001"
+	port := os.Getenv("LISTEN_PORT")
+	if port == "" {
+		port = "7001"
+	}
 	cityClient := city.New()
 	weatherClient := weather.New()
 	http.HandleFunc("/forecast", handler.HandleTemperatureRequest(cityClient, weatherClient))
