@@ -15,4 +15,6 @@ COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certifica
 
 COPY --from=build /app/server /
 
+ENV LISTEN_PORT=7001
+
 CMD ["/server"]
