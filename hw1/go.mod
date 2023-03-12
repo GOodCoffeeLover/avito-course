@@ -1,4 +1,4 @@
-module avito-course
+module hw1
 
 go 1.20
 

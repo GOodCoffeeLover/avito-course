@@ -1,9 +1,9 @@
 package main
 
 import (
-	"avito-course/internal/city"
-	"avito-course/internal/handler"
-	"avito-course/internal/weather"
+	"hw1/internal/city"
+	"hw1/internal/handler"
+	"hw1/internal/weather"
 	"log"
 	"net/http"
 	"os"

@@ -1,0 +1,6 @@
+go 1.20
+
+use (
+	/home/schizo/study/avito-course/hw2/tcp-guesser
+	/home/schizo/study/avito-course/hw2/tcp-guesser-client
+)
