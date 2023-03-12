@@ -30,11 +30,11 @@ func main() {
 			log.Fatalf("can't accept port: %v", err)
 		}
 		log.Println("accept port")
-		loop(conn)
+		session(conn)
 	}
 }
 
-func loop(conn net.Conn) {
+func session(conn net.Conn) {
 	for {
 		log.Print("waiting for message...")
 		message, err := bufio.NewReader(conn).ReadString('\n')
