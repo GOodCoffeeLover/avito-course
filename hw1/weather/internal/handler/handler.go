@@ -1,11 +1,16 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
+	"weather/pkg/auth"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type temeratureRequestBody map[string]interface{}
@@ -35,9 +40,18 @@ func HandleTemperatureRequest(c citier, w weatherer) func(w http.ResponseWriter,
 		city := r.URL.Query().Get("city")
 		dt := r.URL.Query().Get("dt")
 		userName := r.URL.Query().Get("user")
+		auth, err := checkAuth(userName)
+		if err != nil {
+			handleError(rw, 500, fmt.Sprintf("Can't auth: %v", err))
+			return
+		}
+		if !auth {
+			handleError(rw, 403, "Did not authed")
+			return
+		}
 
 		if city == "" {
-			handleError(rw, 400, fmt.Errorf("Did not get city"))
+			handleError(rw, 400, "Did get empty city")
 			return
 		}
 
@@ -49,18 +63,18 @@ func HandleTemperatureRequest(c citier, w weatherer) func(w http.ResponseWriter,
 
 		timestamp, err := time.Parse("2006-01-02T03:04:05", dt)
 		if err != nil {
-			handleError(rw, 400, fmt.Errorf("Can't parse dt: %v", err))
+			handleError(rw, 400, fmt.Sprintf("Can't parse dt: %v", err))
 			return
 		}
 
 		lat, lng, err := c.GetLocationByAddress(city)
 		if err != nil {
-			handleError(rw, 400, err)
+			handleError(rw, 400, fmt.Sprintf("Can't get location: %v", err))
 			return
 		}
 		temp, err := w.GetTemperature(lat, lng, timestamp)
 		if err != nil {
-			handleError(rw, 400, fmt.Errorf("Can't get temperature for city(%v): %v", city, err))
+			handleError(rw, 400, fmt.Sprintf("Can't get temperature for city(%v): %v", city, err))
 			return
 		}
 		resp := response{
@@ -73,11 +87,25 @@ func HandleTemperatureRequest(c citier, w weatherer) func(w http.ResponseWriter,
 	}
 }
 
-func handleError(w http.ResponseWriter, exitCode int, err error) {
+func handleError(w http.ResponseWriter, exitCode int, err string) {
 	w.WriteHeader(exitCode)
 	errResp := errorResponse{
 		Error: fmt.Sprint(err),
 	}
 	errBody, _ := json.Marshal(errResp)
 	w.Write(errBody)
+}
+
+func checkAuth(name string) (bool, error) {
+	conn, err := grpc.Dial(":50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return false, fmt.Errorf("can't connect to auther: %v", err)
+	}
+
+	c := auth.NewAutherClient(conn)
+	res, err := c.AuthByName(context.Background(), &auth.AuthByNameRequest{Name: name})
+	if err != nil {
+		return false, fmt.Errorf("error during auth: %v", err)
+	}
+	return res.GetAuthed(), nil
 }

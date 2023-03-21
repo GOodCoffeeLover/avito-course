@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"wheater/internal/city"
-	"wheater/internal/handler"
-	"wheater/internal/weather"
+	"weather/internal/city"
+	"weather/internal/handler"
+	"weather/internal/weather"
 )
 
 func main() {
