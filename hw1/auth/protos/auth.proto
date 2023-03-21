@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package auth;
+option go_package = "pkg/auth";
+
+service Auther {
+    rpc AuthByName (AuthByNameRequest) returns (AuthByNameResponse) {}
+}
+
+message AuthByNameRequest {
+    string name = 1;
+}
+
+message AuthByNameResponse {
+    bool authed = 1;
+}
