@@ -97,7 +97,7 @@ func handleError(w http.ResponseWriter, exitCode int, err string) {
 }
 
 func checkAuth(name string) (bool, error) {
-	conn, err := grpc.Dial(":50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial("auth:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return false, fmt.Errorf("can't connect to auther: %v", err)
 	}

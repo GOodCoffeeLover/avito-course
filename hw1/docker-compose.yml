@@ -1,0 +1,35 @@
+version: "3"
+
+services:
+  auth:
+    image: auth:1.0.0
+    ports:
+      - "50051:50051"
+    build: ./auth
+    networks:
+      - default
+
+  weather:
+    image: weather:1.0.0
+    ports:
+      - "7001:7001"
+    build: ./weather
+    depends_on:
+      - auth
+    networks:
+      - default
+  
+  envoy:
+    image: envoyproxy/envoy:dev-6c702f45fadf4abd2f24605e3d9e81c748b13f85
+    ports: 
+      - 10000:1000
+    depends_on:
+      - weather
+    networks:
+      - default
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+
+networks:
+  default:
+    driver: bridge
