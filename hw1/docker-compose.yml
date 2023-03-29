@@ -19,6 +19,18 @@ services:
     networks:
       - default
   
+  weather-2:
+    image: weather:1.0.0
+    ports:
+      - "7002:7002"
+    build: ./weather
+    environment:
+      - LISTEN_PORT=7002
+    depends_on:
+      - auth
+    networks:
+      - default
+  
   envoy:
     image: envoyproxy/envoy:dev-6c702f45fadf4abd2f24605e3d9e81c748b13f85
     ports:
@@ -26,6 +38,7 @@ services:
       - 8080:8080
     depends_on:
       - weather
+      - weather-2
     networks:
       - default
     volumes:

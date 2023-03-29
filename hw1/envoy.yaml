@@ -39,6 +39,12 @@ static_resources:
               socket_address:
                 address: weather
                 port_value: 7001
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: weather-2
+                port_value: 7002
 
 admin:
   address:
