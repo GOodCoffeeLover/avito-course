@@ -43,7 +43,109 @@ services:
       - default
     volumes:
       - ./envoy.yaml:/etc/envoy/envoy.yaml
+  
+  redis-1:
+    image: 'redis:latest'
+    container_name: redis-1
+    ports:
+      - "6379"
+    volumes:
+      - redis_1_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    networks:
+      - redis-net
+
+  redis-2:
+    image: 'redis:latest'
+    container_name: redis-2
+    ports:
+      - "6379"
+    volumes:
+      - redis_2_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    networks:
+      - redis-net
+
+  redis-3:
+    image: 'redis:latest'
+    container_name: redis-3
+    ports:
+      - "6379"
+    volumes:
+      - redis_3_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    networks:
+      - redis-net
+  
+  redis-4:
+    image: 'redis:latest'
+    container_name: redis-4
+    ports:
+      - "6379"
+    volumes:
+      - redis_4_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    networks:
+      - redis-net
+
+  redis-5:
+    image: 'redis:latest'
+    container_name: redis-5
+    ports:
+      - "6379"
+    volumes:
+      - redis_5_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    networks:
+      - redis-net
+  
+  redis-6:
+    image: 'redis:latest'
+    container_name: redis-6
+    ports:
+      - "6379"
+    volumes:
+      - redis_6_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    networks:
+      - redis-net
+
+  # Ephemeral container to create the Redis cluster connections.
+  # Once the setup is done, this container shuts down
+  # and the cluster can be used by the service app container
+  rc-initiator:
+    container_name: rc-initiator
+    build: 
+      context: redis
+      dockerfile: Dockerfile
+    tty: true
+    depends_on:
+      - redis-1
+      - redis-2
+      - redis-3
+      - redis-4
+      - redis-5
+      - redis-6
+    networks:
+      - redis-net
+
 
 networks:
   default:
     driver: bridge
+  redis-net:
+    driver: bridge
+
+volumes:
+  redis_1_data: {}
+  redis_2_data: {}
+  redis_3_data: {}
+  redis_4_data: {}
+  redis_5_data: {}
+  redis_6_data: {}
