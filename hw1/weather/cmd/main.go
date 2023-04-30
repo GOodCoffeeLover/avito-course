@@ -7,6 +7,8 @@ import (
 	"weather/internal/city"
 	"weather/internal/handler"
 	"weather/internal/weather"
+
+	"github.com/go-redis/redis"
 )
 
 func main() {
@@ -14,11 +16,20 @@ func main() {
 	if port == "" {
 		port = "7001"
 	}
+	addr := "0.0.0.0:" + port
+
 	cityClient := city.New()
 	weatherClient := weather.New()
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: "twem-proxy:16379",
+	})
 
-	http.HandleFunc("/forecast", handler.HandleTemperatureRequest(cityClient, weatherClient))
-	addr := "0.0.0.0:" + port
+	res := redisClient.Ping()
+	if res.Err() != nil {
+		log.Fatalf("Can't ping redis client: %v", res.Err())
+	}
+
+	http.HandleFunc("/forecast", handler.HandleTemperatureRequest(cityClient, weatherClient, redisClient))
 
 	log.Printf("Starting server at %v ...", addr)
 

@@ -16,6 +16,7 @@ services:
     build: ./weather
     depends_on:
       - auth
+      - twem-proxy
     networks:
       - default
   
@@ -28,6 +29,7 @@ services:
       - LISTEN_PORT=7002
     depends_on:
       - auth
+      - twem-proxy
     networks:
       - default
   
@@ -134,6 +136,20 @@ services:
       - redis-6
     networks:
       - redis-net
+  
+  twem-proxy:
+    image: tarantool/twemproxy
+    command:
+      - --verbose=11
+    volumes:
+      - ./nutcracker.yml:/conf/nutcracker.yml
+    depends_on:
+      - rc-initiator
+    ports:
+      - 16379:16379
+    networks:
+      - redis-net
+      - default
 
 
 networks:

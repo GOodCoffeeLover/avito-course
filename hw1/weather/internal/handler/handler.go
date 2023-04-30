@@ -9,9 +9,12 @@ import (
 	"time"
 	"weather/pkg/auth"
 
+	"github.com/go-redis/redis"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
+
+const timeFormat = time.DateOnly + "T" + time.TimeOnly
 
 type temeratureRequestBody map[string]interface{}
 
@@ -33,14 +36,16 @@ type response struct {
 	Temperature float64 `json:"temperature"`
 }
 
-func HandleTemperatureRequest(c citier, w weatherer) func(w http.ResponseWriter, r *http.Request) {
+func HandleTemperatureRequest(cityClient citier, weatherClient weatherer, redisClient *redis.Client) func(w http.ResponseWriter, r *http.Request) {
 	return func(rw http.ResponseWriter, r *http.Request) {
+
 		log.Printf("Get request for %v with method %v and params %v", r.URL.Path, r.Method, r.URL.Query())
+
 		rw.Header().Set("Content-Type", "application/json")
-		city := r.URL.Query().Get("city")
-		dt := r.URL.Query().Get("dt")
+
 		userName := r.URL.Query().Get("user")
 		auth, err := checkAuth(userName)
+
 		if err != nil {
 			handleError(rw, 500, fmt.Sprintf("Can't auth: %v", err))
 			return
@@ -50,40 +55,10 @@ func HandleTemperatureRequest(c citier, w weatherer) func(w http.ResponseWriter,
 			return
 		}
 
-		if city == "" {
-			handleError(rw, 400, "Did get empty city")
-			return
-		}
+		city := r.URL.Query().Get("city")
+		dt := r.URL.Query().Get("dt")
+		getWeather(rw, city, dt, cityClient, weatherClient)
 
-		log.Printf("City: %v", city)
-		log.Printf("Timestamp: %v", dt)
-		if dt == "" {
-			dt = time.Now().Format("2006-01-02T03:04:05")
-		}
-
-		timestamp, err := time.Parse("2006-01-02T03:04:05", dt)
-		if err != nil {
-			handleError(rw, 400, fmt.Sprintf("Can't parse dt: %v", err))
-			return
-		}
-
-		lat, lng, err := c.GetLocationByAddress(city)
-		if err != nil {
-			handleError(rw, 400, fmt.Sprintf("Can't get location: %v", err))
-			return
-		}
-		temp, err := w.GetTemperature(lat, lng, timestamp)
-		if err != nil {
-			handleError(rw, 400, fmt.Sprintf("Can't get temperature for city(%v): %v", city, err))
-			return
-		}
-		resp := response{
-			City:        city,
-			Unit:        "celsius",
-			Temperature: temp,
-		}
-		respBytes, _ := json.Marshal(resp)
-		rw.Write(respBytes)
 	}
 }
 
@@ -108,4 +83,41 @@ func checkAuth(name string) (bool, error) {
 		return false, fmt.Errorf("error during auth: %v", err)
 	}
 	return res.GetAuthed(), nil
+}
+
+func getWeather(rw http.ResponseWriter, city, dt string, cityClient citier, weatherClient weatherer) {
+	if city == "" {
+		handleError(rw, 400, "Did get empty city")
+		return
+	}
+
+	log.Printf("City: %v", city)
+	log.Printf("Timestamp: %v", dt)
+	if dt == "" {
+		dt = time.Now().Format(timeFormat)
+	}
+
+	timestamp, err := time.Parse(timeFormat, dt)
+	if err != nil {
+		handleError(rw, 400, fmt.Sprintf("Can't parse dt: %v", err))
+		return
+	}
+
+	lat, lng, err := cityClient.GetLocationByAddress(city)
+	if err != nil {
+		handleError(rw, 400, fmt.Sprintf("Can't get location: %v", err))
+		return
+	}
+	temp, err := weatherClient.GetTemperature(lat, lng, timestamp)
+	if err != nil {
+		handleError(rw, 400, fmt.Sprintf("Can't get temperature for city(%v): %v", city, err))
+		return
+	}
+	resp := response{
+		City:        city,
+		Unit:        "celsius",
+		Temperature: temp,
+	}
+	respBytes, _ := json.Marshal(resp)
+	rw.Write(respBytes)
 }
