@@ -46,16 +46,14 @@ func main() {
 
 		log.Printf("Succesfuly read message of type: %v", msg.Type)
 
-		switch msg.Type {
-		case types[0]:
+		if msg.Type == types[0] {
 			log.Println(color.GreenString("Done!"))
-		case types[1]:
+
+		} else {
 			if err = writeMessage(writer, msg); err != nil {
 				log.Println(color.RedString("Failed to send message: %v", err))
 			}
 			log.Printf("Succesfuly send message of type %v to %v topic", msg.Type, writeTopic)
-		default:
-			log.Println(color.RedString("Get unknown type: %v", msg.Type))
 		}
 	}
 
