@@ -27,7 +27,10 @@ func New() *Weather {
 func (w *Weather) GetTemperature(lat, lng float64, timestamp time.Time) (float64, error) {
 	temperatures, err := w.getTemperaturesByHour(lat, lng, timestamp)
 	if err != nil {
-		return 0.0, fmt.Errorf("can't get temperatures for (%v, %v) : %v", lat, lng, err)
+		return 0.0, fmt.Errorf("can't get temperatures for coordinates (%v, %v) : %v", lat, lng, err)
+	}
+	if len(temperatures) == 0 {
+		return 0.0, fmt.Errorf("can't get temperature for day %v", timestamp.Format(time.DateOnly))
 	}
 	return temperatures[timestamp.Hour()], nil
 }
