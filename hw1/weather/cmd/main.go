@@ -20,16 +20,6 @@ func main() {
 
 	cityClient := city.New()
 	weatherClient := weather.New()
-	// redisClient := redis.NewClusterClient(&redis.ClusterOptions{
-	// 	Addrs: []string{
-	// 		"redis-1:6379",
-	// 		"redis-2:6379",
-	// 		"redis-3:6379",
-	// 		"redis-4:6379",
-	// 		"redis-5:6379",
-	// 		"redis-6:6379",
-	// 	},
-	// })
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: "twem-proxy:16379",
 	})

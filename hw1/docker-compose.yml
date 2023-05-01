@@ -69,7 +69,7 @@ services:
     command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
     networks:
       - redis-net
-
+  
   redis-3:
     image: 'redis:latest'
     container_name: redis-3
@@ -78,10 +78,10 @@ services:
     volumes:
       - redis_3_data:/data
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
-    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" , "--slaveof", "redis-1", "6379" ]
     networks:
       - redis-net
-  
+
   redis-4:
     image: 'redis:latest'
     container_name: redis-4
@@ -90,50 +90,7 @@ services:
     volumes:
       - redis_4_data:/data
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
-    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
-    networks:
-      - redis-net
-
-  redis-5:
-    image: 'redis:latest'
-    container_name: redis-5
-    ports:
-      - "6379"
-    volumes:
-      - redis_5_data:/data
-      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
-    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
-    networks:
-      - redis-net
-  
-  redis-6:
-    image: 'redis:latest'
-    container_name: redis-6
-    ports:
-      - "6379"
-    volumes:
-      - redis_6_data:/data
-      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
-    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
-    networks:
-      - redis-net
-
-  # Ephemeral container to create the Redis cluster connections.
-  # Once the setup is done, this container shuts down
-  # and the cluster can be used by the service app container
-  rc-initiator:
-    container_name: rc-initiator
-    build: 
-      context: redis
-      dockerfile: Dockerfile
-    tty: true
-    depends_on:
-      - redis-1
-      - redis-2
-      - redis-3
-      - redis-4
-      - redis-5
-      - redis-6
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" , "--slaveof", "redis-2", "6379" ]
     networks:
       - redis-net
   
@@ -144,7 +101,10 @@ services:
     volumes:
       - ./nutcracker.yml:/conf/nutcracker.yml
     depends_on:
-      - rc-initiator
+      - redis-1
+      - redis-2
+      - redis-3
+      - redis-4
     ports:
       - 16379:16379
     networks:
