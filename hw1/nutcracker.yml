@@ -6,5 +6,3 @@ twem:
   servers:
    - redis-1:6379:1 redis-1
    - redis-2:6379:1 redis-2
-   - redis-3:6379:1 redis-3
-   - redis-4:6379:1 redis-4

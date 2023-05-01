@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	timeFormat                     = time.DateOnly + "T" + time.TimeOnly
-	lenghtOfImportantTimestampPart = 13
+	inputTimeFormat = time.DateOnly + "T" + time.TimeOnly
+	keyTimeFormat   = time.DateOnly + "T15" // 15 - hours
 )
 
 type citier interface {
@@ -58,7 +58,32 @@ func HandleTemperatureRequest(cityClient citier, weatherClient weatherer, redisC
 
 		city := r.URL.Query().Get("city")
 		dt := r.URL.Query().Get("dt")
-		getWeather(rw, city, dt, cityClient, weatherClient, redisClient)
+
+		if city == "" {
+			handleError(rw, 400, "Did get empty city")
+			return
+		}
+
+		log.Printf("City: %v", city)
+		log.Printf("Timestamp: %v", dt)
+		if dt == "" {
+			dt = time.Now().Format(inputTimeFormat)
+		}
+
+		timestamp, err := time.Parse(inputTimeFormat, dt)
+		if err != nil {
+			handleError(rw, 400, fmt.Sprintf("Can't parse dt: %v", err))
+			return
+		}
+
+		switch r.Method {
+		case "GET":
+			getWeather(rw, city, timestamp, redisClient)
+		case "PUT":
+			saveWeather(rw, city, timestamp, cityClient, weatherClient, redisClient)
+		default:
+			handleError(rw, 405, fmt.Sprintf("unknown method %v", r.Method))
+		}
 
 	}
 }
@@ -86,43 +111,52 @@ func checkAuth(name string) (bool, error) {
 	return res.GetAuthed(), nil
 }
 
-func getWeather(rw http.ResponseWriter, city, dt string, cityClient citier, weatherClient weatherer, redisClient *redis.Client) {
-	if city == "" {
-		handleError(rw, 400, "Did get empty city")
-		return
-	}
-
-	log.Printf("City: %v", city)
-	log.Printf("Timestamp: %v", dt)
-	if dt == "" {
-		dt = time.Now().Format(timeFormat)
-	}
-
-	timestamp, err := time.Parse(timeFormat, dt)
-	if err != nil {
-		handleError(rw, 400, fmt.Sprintf("Can't parse dt: %v", err))
-		return
-	}
-
+func saveWeather(rw http.ResponseWriter, city string, timestamp time.Time, cityClient citier, weatherClient weatherer, redisClient *redis.Client) {
 	lat, lng, err := cityClient.GetLocationByAddress(city)
 	if err != nil {
-		handleError(rw, 400, fmt.Sprintf("Can't get location: %v", err))
+		handleError(rw, 500, fmt.Sprintf("Can't get location: %v", err))
 		return
 	}
+
 	temp, err := weatherClient.GetTemperature(lat, lng, timestamp)
 	if err != nil {
-		handleError(rw, 400, fmt.Sprintf("Can't get temperature for city(%v): %v", city, err))
+		handleError(rw, 500, fmt.Sprintf("Can't get temperature for city(%v): %v", city, err))
 		return
 	}
-	resp := response{
+
+	key := formKey(city, timestamp)
+	if err := redisClient.Set(key, temp, 0).Err(); err != nil {
+		log.Printf("Can't save weather with key %v: %v", key, err)
+		return
+	}
+	log.Printf("Succesfuly saved temperature(%v) for %v", temp, key)
+}
+
+func getWeather(rw http.ResponseWriter, city string, timestamp time.Time, redisClient *redis.Client) {
+
+	key := formKey(city, timestamp)
+	resCmd := redisClient.Get(key)
+	if err := resCmd.Err(); err != nil {
+		handleError(rw, 500, fmt.Sprintf("Can't get weather with key %v: %v", key, err))
+		return
+	}
+
+	temp, err := resCmd.Float64()
+	if err != nil {
+		handleError(rw, 404, fmt.Sprintf("Can't find weather for %v: %v", key, err))
+		return
+	}
+
+	log.Printf("Succesfuly get temperature(%v) for %v", temp, key)
+
+	respBytes, _ := json.Marshal(response{
 		City:        city,
 		Unit:        "celsius",
 		Temperature: temp,
-	}
-	respBytes, _ := json.Marshal(resp)
+	})
 	rw.Write(respBytes)
-	key := city + "@" + dt[:lenghtOfImportantTimestampPart]
-	if err := redisClient.Set(key, temp, 0).Err(); err != nil {
-		log.Printf("Can't save wheather with key %v: %v", key, err)
-	}
+}
+
+func formKey(city string, timestamp time.Time) string {
+	return city + "@" + timestamp.Format(keyTimeFormat)
 }
