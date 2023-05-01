@@ -9,6 +9,7 @@ import (
 	"weather/internal/weather"
 
 	"github.com/go-redis/redis"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -28,6 +29,7 @@ func main() {
 	}
 
 	http.HandleFunc("/forecast", handler.HandleTemperatureRequest(cityClient, weatherClient, redisClient))
+	http.Handle("/metrics", promhttp.Handler())
 
 	log.Printf("Starting server at %v ...", addr)
 
