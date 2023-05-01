@@ -14,9 +14,10 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const timeFormat = time.DateOnly + "T" + time.TimeOnly
-
-type temeratureRequestBody map[string]interface{}
+const (
+	timeFormat                     = time.DateOnly + "T" + time.TimeOnly
+	lenghtOfImportantTimestampPart = 13
+)
 
 type citier interface {
 	GetLocationByAddress(addr string) (lat, lng float64, err error)
@@ -57,7 +58,7 @@ func HandleTemperatureRequest(cityClient citier, weatherClient weatherer, redisC
 
 		city := r.URL.Query().Get("city")
 		dt := r.URL.Query().Get("dt")
-		getWeather(rw, city, dt, cityClient, weatherClient)
+		getWeather(rw, city, dt, cityClient, weatherClient, redisClient)
 
 	}
 }
@@ -85,7 +86,7 @@ func checkAuth(name string) (bool, error) {
 	return res.GetAuthed(), nil
 }
 
-func getWeather(rw http.ResponseWriter, city, dt string, cityClient citier, weatherClient weatherer) {
+func getWeather(rw http.ResponseWriter, city, dt string, cityClient citier, weatherClient weatherer, redisClient *redis.Client) {
 	if city == "" {
 		handleError(rw, 400, "Did get empty city")
 		return
@@ -120,4 +121,8 @@ func getWeather(rw http.ResponseWriter, city, dt string, cityClient citier, weat
 	}
 	respBytes, _ := json.Marshal(resp)
 	rw.Write(respBytes)
+	key := city + "@" + dt[:lenghtOfImportantTimestampPart]
+	if err := redisClient.Set(key, temp, 0).Err(); err != nil {
+		log.Printf("Can't save wheather with key %v: %v", key, err)
+	}
 }
