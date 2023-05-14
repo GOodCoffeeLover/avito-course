@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+
+kind: Deployment
+
+metadata:
+  name: hi-er
+  labels:
+    app: hi-er
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hi-er
+  template:
+    metadata:
+      name: hi-er
+      labels:
+        app: hi-er
+    spec: 
+      containers:
+        - name: hi-er
+          image: hi-er:1.0
+          ports:
+          - containerPort: 8080
