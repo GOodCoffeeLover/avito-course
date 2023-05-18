@@ -13,4 +13,5 @@ kubectl apply -f k8s/
 
 kubectl rollout status deployment hi-er
 
-curl --resolve "hi.info:80:$( minikube ip )"  hi.info
+minikube service hi-er
+# curl --resolve "hi.info:80:$( minikube ip )"  hi.info
